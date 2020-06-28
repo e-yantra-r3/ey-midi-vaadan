@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Software - e-Yantra MIDI Vaadan</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">e-Yantra MIDI Vaadan</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Introduction</a>
+                            </li>
+                            <li class="navitem active">
+                                <a href="./" class="nav-link">Software</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../Simulation/" class="nav-link">Simulation</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../hardware/" class="nav-link">Hardware</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../references/" class="nav-link">References</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../Simulation/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#software" class="nav-link">Software</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#software-used" class="nav-link">Software used</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#applications-of-different-software" class="nav-link">Applications of different software</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#software-integration" class="nav-link">Software Integration</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="software">Software</h1>
+<hr />
+<h2 id="software-used">Software used</h2>
+<ul>
+<li>Ableton 9 DAW (Download <a href="https://getintopc.com/softwares/music/ableton-live-9-suite-free-download/">here</a>)</li>
+<li>Hairless MIDI&lt;-&gt;Serial Bridge (Download <a href="https://projectgus.github.io/hairless-midiserial/">here</a>)</li>
+<li>loopmidi (Download <a href="https://www.tobias-erichsen.de/software/loopmidi.html">here</a>)</li>
+<li>e-Yantra IDE for eYFi Mega (a flavor of Arduino IDE) </li>
+</ul>
+<hr />
+<h2 id="applications-of-different-software">Applications of different software</h2>
+<ul>
+<li><strong>Ableton 9</strong> is a Digital Audio Workstation. It takes in MIDI messages as input, and then behaves accordingly to the specified messages. It is used for producing the sounds/music that we can hear. The MIDI controller does not produce music, it is this software that produces the notes/sounds. </li>
+<li><strong>Loopmidi</strong> is used to create a virtual MIDI port. Since, we do not have a MIDI port in any conventional laptop, it is this virtual port through which the midi messages are passed to <strong>Ableton 9</strong>.</li>
+<li><strong>Hairless MIDI&lt;-&gt;Serial Bridge</strong>, as the name suggests acts as a bridge to convert the MIDI messages sent via serial port of the microcontroller to appropriate MIDI data, which is sent through the virtual port created by loopmidi and eventually interpreted by the DAW.</li>
+<li><strong>e-Yantra IDE</strong> is a spinoff of traditional Arduino IDE, with custom bootloader for the eYFi Mega development board. It follows the same programming convention as Arduino IDE, and is used to upload programs to the eYFi Mega board.</li>
+</ul>
+<hr />
+<h2 id="software-integration">Software Integration</h2>
+<p>Firstly, launch <strong>loopmidi</strong> and create a port. The default name of the port is <em>loopMIDI Port</em>. </p>
+<blockquote>
+<p><img alt="loop" src="../img/loop.png" /></p>
+</blockquote>
+<p>Next launch <strong>Hairless MIDI&lt;-&gt;Serial Bridge</strong>.</p>
+<blockquote>
+<p><img alt="hof" src="../img/hairoff.png" /></p>
+</blockquote>
+<p>Select the serial port with which the board is connected. Also, select the MIDI Out port, The default port being <em>loopMIDI Port</em>. The MIDI messages can be debugged by ticking the <em>Debug MIDI messages</em> checkbox.</p>
+<blockquote>
+<p><img alt="hon" src="../img/hairon.png" /></p>
+</blockquote>
+<p>Now, launch Ableton 9.</p>
+<blockquote>
+<p><img alt="amain" src="../img/abletonmain.png" /></p>
+</blockquote>
+<p>Go to preferences to set the input MIDI port.</p>
+<blockquote>
+<p><img alt="pref" src="../img/loopmidiableton.png" /></p>
+</blockquote>
+<p>Now one would see incoming MIDI messages in the top right corner. A blinking light exhibits that Ableton 9 is receiving MIDI messages.</p>
+<blockquote>
+<p><img alt="mid" src="../img/midmsg.png" /></p>
+</blockquote>
+<p>We can also map the inputs of the e-Yantra Midi Vaadan, with different parameters in Ableton 9. This can be done by clicking on the <em>MIDI</em> tab on top right corner. This will activate the MIDI mapping mode.</p>
+<blockquote>
+<p><img alt="amb" src="../img/abletonmapping.png" /></p>
+</blockquote>
+<p>The ones highlighted in blue can be mapped. Just select any one of the highlighted parameter/controller, that needs to be manipulated by input, and then give certain input (for e.g, rotate a potentiometer, press a button), and it will get bound with the one in software.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

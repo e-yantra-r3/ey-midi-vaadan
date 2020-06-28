@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Code - e-Yantra MIDI Vaadan</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">e-Yantra MIDI Vaadan</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Introduction</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../Software/" class="nav-link">Software</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../Simulation/" class="nav-link">Simulation</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../hardware/" class="nav-link">Hardware</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="../references/" class="nav-link">References</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#code" class="nav-link">Code</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#pin-declarations-and-definitions" class="nav-link">Pin declarations and definitions</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#interrupts" class="nav-link">Interrupts</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#analog-readings" class="nav-link">Analog Readings</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#keypads" class="nav-link">Keypads</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="code">Code</h1>
+<hr />
+<p>Go through the following code.</p>
+<h2 id="pin-declarations-and-definitions">Pin declarations and definitions</h2>
+<pre><code class="c">#include &lt;Arduino_FreeRTOS.h&gt;
+#include &quot;queue.h&quot;
+#include &lt;Keypad.h&gt;
+
+//analog input pins
+#define pitchpin A0
+#define modulationpin A2
+#define volumepin A1
+
+//Keypad related declarations
+const byte ROWS = 4; //four rows
+const byte COLS = 4; //four columns
+char keys1[ROWS][COLS] = {
+  {'A', 'B', 'C', 'D'},
+  {'E', 'F', 'G', 'H'},
+  {'I', 'J', 'K', 'L'},
+  {'M', 'N', 'O', 'P'}
+};
+byte rowPins[ROWS] = {22, 24, 26, 28}; //connect to the row pinouts of the kpd1
+byte colPins[COLS] = {29, 27, 25, 23}; //connect to the column pinouts of the kpd1
+
+Keypad kpd1 = Keypad( makeKeymap(keys1), rowPins, colPins, ROWS, COLS );
+
+char keys2[ROWS][COLS] = {
+  {'A', 'B', 'C', 'D'},
+  {'E', 'F', 'G', 'H'},
+  {'I', 'J', 'K', 'L'},
+  {'M', 'N', 'O', 'P'}
+};
+byte colpins[COLS] = {47, 42, 36, 34}; //connect to the row pinouts of the kpd2
+byte rowpins[ROWS] = {48, 43, 37, 35}; //connect to the column pinouts of the kpd2
+
+Keypad kpd2 = Keypad( makeKeymap(keys2), rowpins, colpins, ROWS, COLS );
+
+int volume = 100;
+
+
+//Interrupt related declarations
+#define enc1A 20
+#define enc2A 21
+#define enc1B 31
+#define enc2B 33
+#define pb1 18 //pushbutton
+#define pb2 19 //pushbutton
+
+volatile int count1 = 64;
+volatile int count2 = 64;
+volatile int count = 0;
+volatile long last1 = 0;
+volatile long last2 = 0;
+
+//Queue Creation
+QueueHandle_t Queue1,Queue2;
+
+int prev1 = 0, prev2 = 515, prev3 = 517;
+int vol = 100;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(pitchpin, INPUT);
+  pinMode(modulationpin, INPUT);
+  pinMode(volumepin, INPUT);
+  interrupt_set();
+  xTaskCreate(Readkey1, &quot;one&quot;, 128, NULL, 0, NULL); //task for pushbutton keypad
+  xTaskCreate(Readkey2, &quot;two&quot;, 128, NULL, 0, NULL); //task for membrane keypad
+  xTaskCreate(getPitchMod, &quot;pitch_mod&quot;, 128, NULL, 2, NULL); //task for pitch bends
+  xTaskCreate(getVolume, &quot;vol&quot;, 100, NULL, 2, NULL); //task for channel volume
+  Queue1 =  xQueueCreate(5, sizeof(int32_t));
+  Queue2 =  xQueueCreate(5, sizeof(int32_t));
+}
+
+void loop() { }
+
+void Midi(int status, int dat1, int dat2) { //MIDI message structure consists  of three bytes
+  Serial.write(status);
+  Serial.write(dat1);
+  Serial.write(dat2);
+}
+</code></pre>
+
+<hr />
+<h2 id="interrupts">Interrupts</h2>
+<pre><code class="c">void interrupt_set() {
+  pinMode( enc1A, INPUT);
+  digitalWrite(enc1A, HIGH); //Assign an initial state to prevent floating
+  pinMode(enc1B, INPUT);
+  digitalWrite(enc1B, HIGH); //Assign an initial state to prevent floating
+  attachInterrupt(digitalPinToInterrupt(enc1A), Count1, RISING); //interrupt on Rising edge
+
+  pinMode( enc2A, INPUT);
+  digitalWrite(enc2A, HIGH); //Assign an initial state to prevent floating
+  pinMode(enc2B, INPUT);
+  digitalWrite(enc2B, HIGH); //Assign an initial state to prevent floating
+  attachInterrupt(digitalPinToInterrupt(enc2A), Count2, RISING); //interrupt on Rising edge
+
+  pinMode( pb1, INPUT);
+  digitalWrite(pb1, HIGH); //Assign an initial state to prevent floating
+  attachInterrupt(digitalPinToInterrupt(pb1), PB1, RISING); //interrupt on Rising edge
+
+  pinMode( pb2, INPUT);
+  digitalWrite(pb2, HIGH); //Assign an initial state to prevent floating
+  attachInterrupt(digitalPinToInterrupt(pb2), PB2, RISING); //interrupt on Rising edge
+
+  pinMode(18, INPUT);
+  pinMode(19, INPUT);
+  digitalWrite(19, LOW); //Assign an initial state to prevent floating
+  digitalWrite(18, LOW); //Assign an initial state to prevent floating
+  attachInterrupt(digitalPinToInterrupt(18), ScaleUp, RISING); //interrupt on Rising edge
+  attachInterrupt(digitalPinToInterrupt(19), ScaleDown, RISING); //interrupt on Rising edge
+}
+
+//ISR definitions
+void Count1() {
+  int A2state = digitalRead(enc1A);
+  int B2state = digitalRead(enc1B);
+  if (B2state == A2state)
+    (count1&gt;0)?(count1--):count1=0; //limit min value of count1 to 0
+  else
+    (count1&lt;127)?(count1++):count1=127; //limit max value of count1 to 127
+
+  Midi(177, 0, count1);
+}
+
+void Count2() {
+  int A2state = digitalRead(enc2A);
+  int B2state = digitalRead(enc2B);
+  if (B2state == A2state)
+    (count2&gt;0)?(count2--):count2=0; //limit min value of count2 to 0
+  else
+    (count2&lt;127)?(count2++):count2=127; //limit max value of count2 to 127
+
+  Midi(177, 1, count2);
+}
+
+void ScaleUp() {
+  if (millis() - last1 &gt; 200) { //debouncing
+    if(count &lt; 32)
+      count = count + 16; //Increase the scale of octave
+    last1 = millis();
+  }
+}
+void ScaleDown() {
+  if (millis() - last2 &gt; 200) { //debouncing
+    if(count &gt; -60)
+      count = count - 16; //Decrease the scale of octave
+    last2 = millis();
+  }
+}
+</code></pre>
+
+<hr />
+<h2 id="analog-readings">Analog Readings</h2>
+<pre><code class="c++">#define pitchbend1 224 //on channel1
+#define pitchbend2 225 //on channel2
+void getPitchMod() {
+  int32_t valueReceived;
+  BaseType_t qStatus;
+  while (1) {
+    xQueueReceive(Queue1, &amp;valueReceived, portMAX_DELAY); //wait indefinitely until trigger
+    Midi(pitchbend2, 0, map(analogRead(modulationpin), 0, 1024, 0, 127));
+    Midi(pitchbend1, 0 , map(analogRead(pitchpin), 0, 1024, 0, 127));
+  }
+}
+
+void getVolume() {
+  int32_t valueReceived;
+  BaseType_t qStatus;
+  while (1) {
+    xQueueReceive(Queue2, &amp;valueReceived, portMAX_DELAY); //wait indefinitely until trigger
+    vol = map(analogRead(volumepin), 0, 1023, 0, 127);
+    Midi(176, 7, vol);
+  }
+}
+</code></pre>
+
+<hr />
+<h2 id="keypads">Keypads</h2>
+<pre><code class="c++">#define channel1 144 //channel1
+#define channel2 145
+int midC = 60; // MIDI note value for middle C on a standard keyboard
+void Readkey1() {
+
+  BaseType_t qStatus;
+  int32_t valueToSend = 1999; //this is just a token value
+  while (1) {
+
+    if (abs(analogRead(volumepin) - prev1) &gt; 2) { //check if there is a change in the input reading
+      qStatus = xQueueSend(Queue2, &amp;valueToSend, 0); //send a dummy trigger on queue
+      prev1 = analogRead(volumepin);
+    }
+
+    if (abs(analogRead(pitchpin) - prev2) &gt; 3) { //check if there is a change in the input reading
+      qStatus = xQueueSend(Queue1, &amp;valueToSend, 0); //send a dummy trigger on queue
+      prev2 = analogRead(pitchpin);
+    }
+
+    if (abs(analogRead(modulationpin) - prev3) &gt; 3) { //check if there is a change in the input reading
+      qStatus = xQueueSend(Queue1, &amp;valueToSend, 0); //send a dummy trigger on queue
+      prev3 = analogRead(modulationpin);
+    }
+
+    if (kpd1.getKeys())  // supports up to ten simultaneous key presses
+    {
+      for (int i = 0; i &lt; LIST_MAX; i++) // scan the whole key list
+      {
+        if ( kpd1.key[i].stateChanged)   // find keys that have changed state
+        {
+          if (kpd1.key[i].kstate == PRESSED) // sends MIDI on message when keys are pressed
+          {
+            switch (kpd1.key[i].kchar) {
+              case 'A':
+                Midi(channel1, midC + count + 0, volume);
+                break;
+              case 'B':
+                Midi(channel1, midC + count + 1, volume);
+                break;
+              case 'C':
+                Midi(channel1, midC + count + 2, volume);
+                break;
+              case 'D':
+                Midi(channel1, midC + count + 3, volume);
+                break;
+              case 'E':
+                Midi(channel1, midC + count + 4, volume);
+                break;
+              case 'F':
+                Midi(channel1, midC + count + 5, volume);
+                break;
+              case 'G':
+                Midi(channel1, midC + count + 6, volume);
+                break;
+              case 'H':
+                Midi(channel1, midC + count + 7, volume);
+                break;
+              case 'I':
+                Midi(channel1, midC + count + 8, volume);
+                break;
+              case 'J':
+                Midi(channel1, midC + count + 9, volume);
+                break;
+              case 'K':
+                Midi(channel1, midC + count + 10, volume);
+                break;
+              case 'L':
+                Midi(channel1, midC + count + 11, volume);
+                break;
+              case 'M':
+                Midi(channel1, midC + count + 12, volume);
+                break;
+              case 'N':
+                Midi(channel1, midC + count + 13, volume);
+                break;
+              case 'O':
+                Midi(channel1, midC + count + 14, volume);
+                break;
+              case 'P':
+                Midi(channel1, midC + count + 15, volume);
+                break;
+            }
+          }
+          if (kpd1.key[i].kstate == RELEASED) // sends MIDI on message when keys are pressed
+          {
+            switch (kpd1.key[i].kchar) {
+              case 'A':
+                Midi(channel1 - 16, midC + count + 0, 0);
+                break;
+              case 'B':
+                Midi(channel1 - 16, midC + count + 1, 0);
+                break;
+              case 'C':
+                Midi(channel1 - 16, midC + count + 2, 0);
+                break;
+              case 'D':
+                Midi(channel1 - 16, midC + count + 3, 0);
+                break;
+              case 'E':
+                Midi(channel1 - 16, midC + count + 4, 0);
+                break;
+              case 'F':
+                Midi(channel1 - 16, midC + count + 5, 0);
+                break;
+              case 'G':
+                Midi(channel1 - 16, midC + count + 6, 0);
+                break;
+              case 'H':
+                Midi(channel1 - 16, midC + count + 7, 0);
+                break;
+              case 'I':
+                Midi(channel1 - 16, midC + count + 8, 0);
+                break;
+              case 'J':
+                Midi(channel1 - 16, midC + count + 9, 0);
+                break;
+              case 'K':
+                Midi(channel1 - 16, midC + count + 10, 0);
+                break;
+              case 'L':
+                Midi(channel1 - 16, midC + count + 11, 0);
+                break;
+              case 'M':
+                Midi(channel1 - 16, midC + count + 12, 0);
+                break;
+              case 'N':
+                Midi(channel1 - 16, midC + count + 13, 0);
+                break;
+              case 'O':
+                Midi(channel1 - 16, midC + count + 14, 0);
+                break;
+              case 'P':
+                Midi(channel1 - 16, midC + count + 15, 0);
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void Readkey2() {
+  while (1) {
+
+    if (kpd2.getKeys())  // supports up to ten simultaneous key presses
+    {
+      for (int i = 0; i &lt; LIST_MAX; i++) // scan the whole key list
+      {
+        if ( kpd2.key[i].stateChanged)   // find keys that have changed state
+        {
+          if (kpd2.key[i].kstate == PRESSED) // sends MIDI on message when keys are pressed
+          {
+            switch (kpd2.key[i].kchar) {
+              case 'A':
+                Midi(channel2, midC + 16 + count + 0, volume);
+                break;
+              case 'B':
+                Midi(channel2, midC + 16 + count + 1, volume);
+                break;
+              case 'C':
+                Midi(channel2, midC + 16 + count + 2, volume);
+                break;
+              case 'D':
+                Midi(channel2, midC + 16 + count + 3, volume);
+                break;
+              case 'E':
+                Midi(channel2, midC + 16 + count + 4, volume);
+                break;
+              case 'F':
+                Midi(channel2, midC + 16 + count + 5, volume);
+                break;
+              case 'G':
+                Midi(channel2, midC + 16 + count + 6, volume);
+                break;
+              case 'H':
+                Midi(channel2, midC + 16 + count + 7, volume);
+                break;
+              case 'I':
+                Midi(channel2, midC + 16 + count + 8, volume);
+                break;
+              case 'J':
+                Midi(channel2, midC + 16 + count + 9, volume);
+                break;
+              case 'K':
+                Midi(channel2, midC + 16 + count + 10, volume);
+                break;
+              case 'L':
+                Midi(channel2, midC + 16 + count + 11, volume);
+                break;
+              case 'M':
+                Midi(channel2, midC + 16 + count + 12, volume);
+                break;
+              case 'N':
+                Midi(channel2, midC + 16 + count + 13, volume);
+                break;
+              case 'O':
+                Midi(channel2, midC + 16 + count + 14, volume);
+                break;
+              case 'P':
+                Midi(channel2, midC + 16 + count + 15, volume);
+                break;
+            }
+          }
+          if (kpd2.key[i].kstate == RELEASED) // sends MIDI on message when keys are pressed
+          {
+            switch (kpd2.key[i].kchar) {
+              case 'A':
+                Midi(channel2 - 16, midC + 16 + count + 0, 0);
+                break;
+              case 'B':
+                Midi(channel2 - 16, midC + 16 + count + 1, 0);
+                break;
+              case 'C':
+                Midi(channel2 - 16, midC + 16 + count + 2, 0);
+                break;
+              case 'D':
+                Midi(channel2 - 16, midC + 16 + count + 3, 0);
+                break;
+              case 'E':
+                Midi(channel2 - 16, midC + 16 + count + 4, 0);
+                break;
+              case 'F':
+                Midi(channel2 - 16, midC + 16 + count + 5, 0);
+                break;
+              case 'G':
+                Midi(channel2 - 16, midC + 16 + count + 6, 0);
+                break;
+              case 'H':
+                Midi(channel2 - 16, midC + 16 + count + 7, 0);
+                break;
+              case 'I':
+                Midi(channel2 - 16, midC + 16 + count + 8, 0);
+                break;
+              case 'J':
+                Midi(channel2 - 16, midC + 16 + count + 9, 0);
+                break;
+              case 'K':
+                Midi(channel2 - 16, midC + 16 + count + 10, 0);
+                break;
+              case 'L':
+                Midi(channel2 - 16, midC + 16 + count + 11, 0);
+                break;
+              case 'M':
+                Midi(channel2 - 16, midC + 16 + count + 12, 0);
+                break;
+              case 'N':
+                Midi(channel2 - 16, midC + 16 + count + 13, 0);
+                break;
+              case 'O':
+                Midi(channel2 - 16, midC + 16 + count + 14, 0);
+                break;
+              case 'P':
+                Midi(channel2 - 16, midC + 16 + count + 15, 0);
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</code></pre></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
